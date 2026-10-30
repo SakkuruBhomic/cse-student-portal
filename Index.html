@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Student Data Form – CSE 6, 7, 8</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --primary: #1d4ed8;
+      --primary-hover: #1e40af;
+      --primary-soft: #eff6ff;
+      --success: #15803d;
+      --success-bg: #dcfce7;
+      --warning: #b45309;
+      --warning-bg: #fef3c7;
+      --danger: #b91c1c;
+      --danger-bg: #fee2e2;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --border: #cbd5e1;
+      --readonly-bg: #f1f5f9;
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+
+    .topbar {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .mode-switch-btn {
+      background: var(--readonly-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .container {
+      max-width: 520px;
+      margin: 20px auto;
+      padding: 0 16px;
+    }
+
+    .container.wide {
+      max-width: 980px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .section-desc {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .search-wrapper {
+      position: relative;
+    }
+
+    .search-input-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input {
+      width: 100%;
+      font-size: 16px;
+      padding: 14px 40px 14px 14px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      outline: none;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+    }
+
+    .clear-search-btn {
+      position: absolute;
+      right: 10px;
+      background: #e2e8f0;
+      border: none;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      font-size: 16px;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .autocomplete-list {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      max-height: 280px;
+      overflow-y: auto;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+      z-index: 50;
+      display: none;
+    }
+
+    .autocomplete-item {
+      padding: 12px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+
+    .autocomplete-item:hover {
+      background-color: var(--primary-soft);
+    }
+
+    .ac-name {
+      font-weight: 600;
+      font-size: 0.92rem;
+      color: var(--text);
+    }
+
+    .ac-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      background: #f1f5f9;
+      padding: 3px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+
+    .readonly-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+      background: var(--readonly-bg);
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .readonly-field.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .readonly-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .readonly-value {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .required-star {
+      color: var(--danger);
+      margin-left: 2px;
+    }
+
+    .form-control {
+      width: 100%;
+      font-size: 16px;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+    }
+
+    .form-control:disabled {
+      background: var(--readonly-bg);
+      color: var(--text-muted);
+      cursor: not-allowed;
+    }
+
+    .submit-btn {
+      width: 100%;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 20px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .secondary-btn {
+      width: 100%;
+      background: #fff;
+      color: var(--text);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+
+    .banner {
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .banner.info {
+      display: block;
+      background: var(--primary-soft);
+      color: #1e3a8a;
+      border: 1px solid #bfdbfe;
+    }
+
+    .banner.error {
+      display: block;
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid #fecaca;
+    }
+
+    .banner.success {
+      display: block;
+      background: var(--success-bg);
+      color: var(--success);
+      border: 1px solid #bbf7d0;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255, 255, 255, 0.35);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    .spinner.dark {
+      border-color: rgba(15, 23, 42, 0.2);
+      border-top-color: var(--primary);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-box {
+      background: var(--readonly-bg);
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .stat-number {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+
+    .progress-bar-outer {
+      width: 100%;
+      height: 12px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .progress-bar-inner {
+      height: 100%;
+      background: var(--success);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .admin-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .filter-chip {
+      padding: 7px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .filter-chip.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .export-btn {
+      background: var(--success);
+      color: #fff;
+      border: none;
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      white-space: nowrap;
+    }
+
+    th {
+      background: var(--readonly-bg);
+      font-weight: 700;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+
+    .status-pill {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .status-pill.done {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+
+    .status-pill.pending {
+      background: var(--warning-bg);
+      color: var(--warning);
+    }
+
+    .creator-badge {
+      display: inline-block;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-title">CSE (Sections 6, 7, 8)</span>
+      <span class="brand-subtitle">Student Academic Details Form • <span class="creator-badge">Created by Bhomic (CSE-7)</span></span>
+    </div>
+    <button type="button" id="toggleViewBtn" class="mode-switch-btn" onclick="toggleAdminView()">
+      Admin Dashboard
+    </button>
+  </header>
+
+  <!-- STUDENT VIEW -->
+  <main id="studentView" class="container">
+    <section class="card">
+      <h1 class="section-title">Find Your Record</h1>
+      <p class="section-desc">Start typing your name below and select it from the list.</p>
+
+      <div id="initialLoader" style="display:flex; align-items:center; gap:10px; font-size:0.875rem; color:var(--text-muted); margin-bottom:10px;">
+        <div class="spinner dark"></div>
+        <span>Loading student list from CSE_6,7,8...</span>
+      </div>
+
+      <div class="search-wrapper">
+        <div class="search-input-box">
+          <input
+            type="text"
+            id="studentSearchInput"
+            class="search-input"
+            placeholder="Enter your name"
+            autocomplete="off"
+            disabled
+          />
+          <button type="button" id="clearSearchBtn" class="clear-search-btn" title="Clear search" onclick="resetStudentSelection()">×</button>
+        </div>
+        <div id="autocompleteDropdown" class="autocomplete-list" role="listbox"></div>
+      </div>
+    </section>
+
+    <div id="statusBanner" class="banner"></div>
+
+    <!-- Student Record & Editable Marks Form -->
+    <section id="studentFormCard" class="card hidden">
+      <div id="existingDataNotice" class="banner info hidden">
+        Existing values from your record are shown below. You can complete any missing fields or update them.
+      </div>
+
+      <!-- Read-Only Identity Fields -->
+      <div class="readonly-grid">
+        <div class="readonly-field full-width">
+          <div class="readonly-label">Name of the Student</div>
+          <div id="roName" class="readonly-value">—</div>
+        </div>
+        <div class="readonly-field">
+          <div class="readonly-label">Admin. No</div>
+          <div id="roAdminNo" class="readonly-value">—</div>
+        </div>
+        <div class="readonly-field">
+          <div class="readonly-label">Category</div>
+          <div id="roCategory" class="readonly-value">—</div>
+        </div>
+      </div>
+
+      <!-- Editable Fields: Columns E, F, G, H -->
+      <form id="marksForm" onsubmit="handleFormSubmit(event)" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="sscMarksInput">
+            SSC Marks <span class="required-star">*</span>
+          </label>
+          <input
+            type="text"
+            id="sscMarksInput"
+            class="form-control"
+            placeholder="e.g., 581 or 589/600"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="interMarksInput">
+            Intermediate Marks <span class="required-star">*</span>
+          </label>
+          <input
+            type="text"
+            id="interMarksInput"
+            class="form-control"
+            placeholder="e.g., 980 or 980/1000"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="eamcetRankInput">
+            EAMCET Rank <span class="required-star">*</span>
+          </label>
+          <input
+            type="text"
+            id="eamcetRankInput"
+            class="form-control"
+            inputmode="numeric"
+            placeholder="e.g., 21057"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="ruralUrbanSelect">
+            Rural / Urban <span class="required-star">*</span>
+          </label>
+          <select id="ruralUrbanSelect" class="form-control" required>
+            <option value="">Select Rural or Urban</option>
+            <option value="Rural">Rural</option>
+            <option value="Urban">Urban</option>
+          </select>
+        </div>
+
+        <button type="submit" id="submitBtn" class="submit-btn">
+          <span>Submit Details</span>
+        </button>
+      </form>
+    </section>
+
+    <!-- Submission Confirmation -->
+    <section id="successCard" class="card hidden">
+      <div class="banner success" style="display:block; margin-bottom:16px;">
+        <strong>Submission Confirmed!</strong> Your record in <strong>CSE_6,7,8</strong> has been updated.
+      </div>
+
+      <div class="readonly-grid" id="savedSummaryGrid"></div>
+
+      <button type="button" class="secondary-btn" onclick="resetStudentSelection()">
+        Submit for Another Student
+      </button>
+    </section>
+  </main>
+
+  <!-- ADMIN DASHBOARD VIEW -->
+  <main id="adminView" class="container wide hidden">
+    <section class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+        <div>
+          <h2 class="section-title">Submission Progress Dashboard</h2>
+          <p class="section-desc" style="margin-bottom:0;">Worksheet: <strong>CSE_6,7,8</strong></p>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="mode-switch-btn" onclick="loadDashboard()">Refresh</button>
+          <button type="button" class="export-btn" onclick="exportToExcel()">
+            Export to Excel (.xlsx)
+          </button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Total Students</div>
+          <div id="statTotal" class="stat-number">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Completed</div>
+          <div id="statCompleted" class="stat-number" style="color:var(--success);">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Pending</div>
+          <div id="statPending" class="stat-number" style="color:var(--warning);">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Completion Rate</div>
+          <div id="statPercent" class="stat-number" style="color:var(--primary);">0%</div>
+        </div>
+      </div>
+
+      <div class="progress-bar-outer">
+        <div id="progressBarFill" class="progress-bar-inner"></div>
+      </div>
+
+      <div class="admin-toolbar">
+        <div class="filter-group">
+          <button type="button" class="filter-chip active" onclick="setAdminFilter('all', this)">All</button>
+          <button type="button" class="filter-chip" onclick="setAdminFilter('completed', this)">Completed</button>
+          <button type="button" class="filter-chip" onclick="setAdminFilter('pending', this)">Pending</button>
+        </div>
+        <input
+          type="text"
+          id="adminSearchInput"
+          class="form-control"
+          style="max-width:260px; padding:8px 12px; font-size:0.875rem;"
+          placeholder="Search name or Admin No..."
+          oninput="renderAdminTable()"
+        />
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>S.No</th>
+              <th>Name of the Student</th>
+              <th>Admin. No</th>
+              <th>Category</th>
+              <th>SSC Marks</th>
+              <th>Inter Marks</th>
+              <th>EAMCET Rank</th>
+              <th>Rural/Urban</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="adminTableBody">
+            <tr>
+              <td colspan="9" style="text-align:center; padding:24px; color:var(--text-muted); padding:24px;">
+                Loading records...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const EXTERNAL_WEB_APP_URL = '';
+
+    let allStudents = [];
+    let selectedStudent = null;
+    let isSubmitting = false;
+    let dashboardRecords = [];
+    let currentAdminFilter = 'all';
+
+    const searchInput = document.getElementById('studentSearchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    const dropdown = document.getElementById('autocompleteDropdown');
+    const initialLoader = document.getElementById('initialLoader');
+    const statusBanner = document.getElementById('statusBanner');
+    const studentFormCard = document.getElementById('studentFormCard');
+    const existingDataNotice = document.getElementById('existingDataNotice');
+    const successCard = document.getElementById('successCard');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function callBackend(fnName, arg) {
+      return new Promise((resolve, reject) => {
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+          const runner = google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(reject);
+
+          if (arg !== undefined) {
+            runner[fnName](arg);
+          } else {
+            runner[fnName]();
+          }
+          return;
+        }
+
+        if (!EXTERNAL_WEB_APP_URL) {
+          reject(new Error('Deploy inside Google Apps Script or set EXTERNAL_WEB_APP_URL.'));
+          return;
+        }
+
+        if (fnName === 'getStudentList') {
+          fetch(EXTERNAL_WEB_APP_URL + '?action=list')
+            .then(r => r.json()).then(resolve).catch(reject);
+        } else if (fnName === 'getStudentRecord') {
+          const url = EXTERNAL_WEB_APP_URL +
+            '?action=student&adminNo=' + encodeURIComponent(arg.adminNo || '') +
+            '&name=' + encodeURIComponent(arg.name || '');
+          fetch(url).then(r => r.json()).then(resolve).catch(reject);
+        } else if (fnName === 'getDashboardData') {
+          fetch(EXTERNAL_WEB_APP_URL + '?action=dashboard')
+            .then(r => r.json()).then(resolve).catch(reject);
+        } else if (fnName === 'updateStudentRecord') {
+          fetch(EXTERNAL_WEB_APP_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(arg)
+          }).then(r => r.json()).then(resolve).catch(reject);
+        }
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const res = await callBackend('getStudentList');
+        initialLoader.style.display = 'none';
+
+        if (!res || !res.success) {
+          showBanner((res && res.message) || 'Failed to load student list.', 'error');
+          return;
+        }
+
+        allStudents = res.students || [];
+        searchInput.disabled = false;
+        searchInput.focus();
+      } catch (err) {
+        initialLoader.style.display = 'none';
+        showBanner('Error loading spreadsheet: ' + err.message, 'error');
+      }
+    });
+
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.trim();
+      clearSearchBtn.style.display = query.length > 0 ? 'flex' : 'none';
+
+      if (query.length === 0) {
+        dropdown.style.display = 'none';
+        return;
+      }
+
+      const normalizedQuery = query.toLowerCase();
+      const startsWithMatches = [];
+      const containsMatches = [];
+
+      for (let i = 0; i < allStudents.length; i++) {
+        const s = allStudents[i];
+        const nameLower = s.name.toLowerCase();
+        const adminLower = s.adminNo.toLowerCase();
+
+        if (nameLower.startsWith(normalizedQuery) || adminLower.startsWith(normalizedQuery)) {
+          startsWithMatches.push(s);
+        } else if (nameLower.includes(normalizedQuery) || adminLower.includes(normalizedQuery)) {
+          containsMatches.push(s);
+        }
+      }
+
+      const results = startsWithMatches.concat(containsMatches).slice(0, 25);
+      renderAutocomplete(results);
+    });
+
+    function renderAutocomplete(matches) {
+      dropdown.innerHTML = '';
+
+      if (matches.length === 0) {
+        const emptyEl = document.createElement('div');
+        emptyEl.className = 'autocomplete-item';
+        emptyEl.style.color = 'var(--text-muted)';
+        emptyEl.style.cursor = 'default';
+        emptyEl.textContent = 'No matching student found';
+        dropdown.appendChild(emptyEl);
+        dropdown.style.display = 'block';
+        return;
+      }
+
+      matches.forEach(student => {
+        const item = document.createElement('div');
+        item.className = 'autocomplete-item';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'ac-name';
+        nameSpan.textContent = student.name;
+
+        const metaSpan = document.createElement('span');
+        metaSpan.className = 'ac-meta';
+        metaSpan.textContent = student.adminNo + (student.category ? ' • ' + student.category : '');
+
+        item.appendChild(nameSpan);
+        item.appendChild(metaSpan);
+
+        item.addEventListener('click', () => selectStudentFromList(student.adminNo, student.name));
+        dropdown.appendChild(item);
+      });
+
+      dropdown.style.display = 'block';
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.search-wrapper')) {
+        dropdown.style.display = 'none';
+      }
+    });
+
+    async function selectStudentFromList(adminNo, displayName) {
+      dropdown.style.display = 'none';
+      searchInput.value = displayName;
+      clearSearchBtn.style.display = 'flex';
+      successCard.classList.add('hidden');
+      studentFormCard.classList.add('hidden');
+      showBanner('Fetching record for ' + displayName + '...', 'info');
+
+      try {
+        const res = await callBackend('getStudentRecord', { adminNo: adminNo, name: displayName });
+        if (!res || !res.success) {
+          showBanner((res && res.message) || 'Could not load student record.', 'error');
+          return;
+        }
+
+        hideBanner();
+        populateStudentForm(res.student);
+      } catch (err) {
+        showBanner('Error fetching record: ' + err.message, 'error');
+      }
+    }
+
+    function populateStudentForm(student) {
+      selectedStudent = student;
+
+      document.getElementById('roName').textContent = student.name || '—';
+      document.getElementById('roAdminNo').textContent = student.adminNo || '—';
+      document.getElementById('roCategory').textContent = student.category || '—';
+
+      document.getElementById('sscMarksInput').value = student.sscMarks || '';
+      document.getElementById('interMarksInput').value = student.interMarks || '';
+      document.getElementById('eamcetRankInput').value = student.eamcetRank || '';
+      document.getElementById('ruralUrbanSelect').value =
+        (student.ruralUrban === 'Rural' || student.ruralUrban === 'Urban') ? student.ruralUrban : '';
+
+      const hasExistingMarks = Boolean(
+        student.sscMarks || student.interMarks || student.eamcetRank || student.ruralUrban
+      );
+      if (hasExistingMarks) {
+        existingDataNotice.classList.remove('hidden');
+      } else {
+        existingDataNotice.classList.add('hidden');
+      }
+
+      setFormLocked(false);
+      studentFormCard.classList.remove('hidden');
+    }
+
+    function setFormLocked(locked) {
+      isSubmitting = locked;
+      document.getElementById('sscMarksInput').disabled = locked;
+      document.getElementById('interMarksInput').disabled = locked;
+      document.getElementById('eamcetRankInput').disabled = locked;
+      document.getElementById('ruralUrbanSelect').disabled = locked;
+      submitBtn.disabled = locked;
+
+      if (locked) {
+        submitBtn.innerHTML = '<div class="spinner"></div><span>Updating CSE_Master .xlsx...</span>';
+      } else {
+        submitBtn.innerHTML = '<span>Submit Details</span>';
+      }
+    }
+
+    async function handleFormSubmit(event) {
+      event.preventDefault();
+      if (isSubmitting || !selectedStudent) return;
+
+      const sscMarks = document.getElementById('sscMarksInput').value.trim();
+      const interMarks = document.getElementById('interMarksInput').value.trim();
+      const eamcetRank = document.getElementById('eamcetRankInput').value.trim();
+      const ruralUrban = document.getElementById('ruralUrbanSelect').value.trim();
+
+      const effectiveSSC = sscMarks || selectedStudent.sscMarks;
+      const effectiveInter = interMarks || selectedStudent.interMarks;
+      const effectiveEamcet = eamcetRank || selectedStudent.eamcetRank;
+      const effectiveRuralUrban = ruralUrban || selectedStudent.ruralUrban;
+
+      if (!effectiveSSC || !effectiveInter || !effectiveEamcet || !effectiveRuralUrban) {
+        showBanner('Please fill in SSC Marks, Intermediate Marks, EAMCET Rank, and Rural/Urban.', 'error');
+        return;
+      }
+
+      hideBanner();
+      setFormLocked(true);
+
+      try {
+        const payload = {
+          adminNo: selectedStudent.adminNo,
+          name: selectedStudent.name,
+          sscMarks: effectiveSSC,
+          interMarks: effectiveInter,
+          eamcetRank: effectiveEamcet,
+          ruralUrban: effectiveRuralUrban
+        };
+
+        const res = await callBackend('updateStudentRecord', payload);
+        setFormLocked(false);
+
+        if (!res || !res.success) {
+          showBanner((res && res.message) || 'Update failed. Please try again.', 'error');
+          return;
+        }
+
+        renderSuccessConfirmation(res.updatedRecord);
+      } catch (err) {
+        setFormLocked(false);
+        showBanner('Submission failed: ' + err.message, 'error');
+      }
+    }
+
+    function renderSuccessConfirmation(record) {
+      studentFormCard.classList.add('hidden');
+      const grid = document.getElementById('savedSummaryGrid');
+      grid.innerHTML = '';
+
+      const items = [
+        { label: 'Name of the Student', value: record.name, full: true },
+        { label: 'Admin. No', value: record.adminNo },
+        { label: 'Category', value: record.category },
+        { label: 'SSC Marks', value: record.sscMarks },
+        { label: 'Intermediate Marks', value: record.interMarks },
+        { label: 'EAMCET Rank', value: record.eamcetRank },
+        { label: 'Rural / Urban', value: record.ruralUrban }
+      ];
+
+      items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'readonly-field' + (item.full ? ' full-width' : '');
+
+        const lbl = document.createElement('div');
+        lbl.className = 'readonly-label';
+        lbl.textContent = item.label;
+
+        const val = document.createElement('div');
+        val.className = 'readonly-value';
+        val.textContent = item.value || '—';
+
+        div.appendChild(lbl);
+        div.appendChild(val);
+        grid.appendChild(div);
+      });
+
+      successCard.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetStudentSelection() {
+      selectedStudent = null;
+      searchInput.value = '';
+      clearSearchBtn.style.display = 'none';
+      dropdown.style.display = 'none';
+      studentFormCard.classList.add('hidden');
+      successCard.classList.add('hidden');
+      hideBanner();
+      searchInput.focus();
+    }
+
+    function showBanner(msg, type) {
+      statusBanner.textContent = msg;
+      statusBanner.className = 'banner ' + type;
+    }
+
+    function hideBanner() {
+      statusBanner.className = 'banner';
+      statusBanner.textContent = '';
+    }
+
+    function toggleAdminView() {
+      const studentView = document.getElementById('studentView');
+      const adminView = document.getElementById('adminView');
+      const toggleBtn = document.getElementById('toggleViewBtn');
+
+      const showingAdmin = !adminView.classList.contains('hidden');
+      if (showingAdmin) {
+        adminView.classList.add('hidden');
+        studentView.classList.remove('hidden');
+        toggleBtn.textContent = 'Admin Dashboard';
+      } else {
+        studentView.classList.add('hidden');
+        adminView.classList.remove('hidden');
+        toggleBtn.textContent = 'Back to Student Form';
+        loadDashboard();
+      }
+    }
+
+    async function loadDashboard() {
+      const tbody = document.getElementById('adminTableBody');
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:var(--text-muted);">Loading live data...</td></tr>';
+
+      try {
+        const res = await callBackend('getDashboardData');
+        if (!res || !res.success) {
+          tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:var(--danger);">Failed to load dashboard data.</td></tr>';
+          return;
+        }
+
+        dashboardRecords = res.records || [];
+        const stats = res.stats || { total: 0, completed: 0, pending: 0, percentage: 0 };
+
+        document.getElementById('statTotal').textContent = stats.total;
+        document.getElementById('statCompleted').textContent = stats.completed;
+        document.getElementById('statPending').textContent = stats.pending;
+        document.getElementById('statPercent').textContent = stats.percentage + '%';
+        document.getElementById('progressBarFill').style.width = stats.percentage + '%';
+
+        renderAdminTable();
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:24px; color:var(--danger);">Error: ' + err.message + '</td></tr>';
+      }
+    }
+
+    function setAdminFilter(filterType, btnEl) {
+      currentAdminFilter = filterType;
+      document.querySelectorAll('.filter-chip').forEach(btn => btn.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+      renderAdminTable();
+    }
+
+    function renderAdminTable() {
+      const tbody = document.getElementById('adminTableBody');
+      const searchQuery = (document.getElementById('adminSearchInput').value || '').trim().toLowerCase();
+
+      const filtered = dashboardRecords.filter(r => {
+        if (currentAdminFilter === 'completed' && !r.isComplete) return false;
+        if (currentAdminFilter === 'pending' && r.isComplete) return false;
+        if (searchQuery) {
+          const matchName = r.name.toLowerCase().includes(searchQuery);
+          const matchAdmin = r.adminNo.toLowerCase().includes(searchQuery);
+          if (!matchName && !matchAdmin) return false;
+        }
+        return true;
+      });
+
+      tbody.innerHTML = '';
+
+      if (filtered.length === 0) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 9;
+        td.style.textAlign = 'center';
+        td.style.padding = '24px';
+        td.style.color = 'var(--text-muted)';
+        td.textContent = 'No matching student records.';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+
+      filtered.forEach(r => {
+        const tr = document.createElement('tr');
+        [
+          r.sn,
+          r.name,
+          r.adminNo,
+          r.category,
+          r.sscMarks || '—',
+          r.interMarks || '—',
+          r.eamcetRank || '—',
+          r.ruralUrban || '—'
+        ].forEach(val => {
+          const td = document.createElement('td');
+          td.textContent = val;
+          tr.appendChild(td);
+        });
+
+        const statusTd = document.createElement('td');
+        const pill = document.createElement('span');
+        pill.className = 'status-pill ' + (r.isComplete ? 'done' : 'pending');
+        pill.textContent = r.isComplete ? 'Submitted' : 'Pending';
+        statusTd.appendChild(pill);
+        tr.appendChild(statusTd);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function exportToExcel() {
+      if (!dashboardRecords || dashboardRecords.length === 0) {
+        alert('No records loaded to export.');
+        return;
+      }
+
+      const exportRows = dashboardRecords.map(r => ({
+        'S.No': r.sn,
+        'Name of the Student': r.name,
+        'Admin. No': r.adminNo,
+        'Categeory': r.category,
+        'SSC Marks': r.sscMarks,
+        'Inter Marks': r.interMarks,
+        'Eamcet Rank': r.eamcetRank,
+        'Rural/Urban': r.ruralUrban,
+        'Status': r.isComplete ? 'Completed' : 'Pending'
+      }));
+
+      if (typeof XLSX !== 'undefined') {
+        const worksheet = XLSX.utils.json_to_sheet(exportRows);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'CSE_6,7,8');
+        XLSX.writeFile(workbook, 'CSE_Master_Updated.xlsx');
+      }
+    }
+  </script>
+</body>
+</html>

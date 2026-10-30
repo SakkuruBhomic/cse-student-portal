@@ -1,0 +1,11 @@
+# Node / Dependencies
+node_modules/
+package-lock.json
+
+# Local Clasp Credentials
+.clasprc.json
+
+# OS & Environment
+.DS_Store
+Thumbs.db
+*.log
